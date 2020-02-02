@@ -1,0 +1,6 @@
+Q. What is CSRF token in Django?
+
+Ans. Django protects against CSRF attacks by generating a CSRF token in the server,
+send it to the client side, and mandating the client to send the token back in the request header.
+The server will then verify if the token from client is the same as the one generated previously;
+if not it will not authorise the request.
