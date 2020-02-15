@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
     'get_started',
     'using_api_view'
 ]
@@ -108,6 +109,24 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+}
+# DjangoFilterBackend class which supports highly customizable field filtering for REST framework.
+
+
+APPEND_SLASH = True
+"""
+APPEND_SLASH doesn't happen unconditionally -- it only comes into effect if, 
+after trying all existing URL patterns (and the associated view, if one matches), 
+Django is about to return a 404.
+If that's the case, and the original request didn't have a slash at the end, 
+then Django checks to see whether any URL patterns would match with a trailing slash. 
+If so, it issues an HTTP redirect (301).
+If any of your URL patterns match the original request (without the slash), 
+then Django will try that one first. If that raises an exception, then you will see it 
+(I suspect that this is what is happening). Django won't ever get to issue the redirect.
+"""
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/

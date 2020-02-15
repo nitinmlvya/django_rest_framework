@@ -1,9 +1,11 @@
-from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
-from using_api_view.models import CategoryAV, SubCategoryAV, VendorAV, DeliveryAV
+from using_api_view.models import CategoryAV, SubCategoryAV, VendorAV, DeliveryAV, Member, Group, Membership
 from using_api_view.serializers import CategoryAVSerializer, SubCategoryAVSerializer, VendorAVSerializer, \
-    DeliveryAVSerializer
+    DeliveryAVSerializer, MemberSerializer, GroupSerializer, GroupMemberSerializer
 
 
 @api_view(['GET', 'POST'])
@@ -112,3 +114,116 @@ def delivery_av_list(request):
             delivery_av_serializer.save()
             return Response(delivery_av_serializer.data, status=status.HTTP_201_CREATED)
         return Response(delivery_av_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+"""
+Many to Many View set
+"""
+
+class MemberViewSet(viewsets.ModelViewSet):
+    """
+    ModelViewSet is a class that provides the functionality of a set of views which are closely related.
+    It’s one class but provides a set of views and methods such as list, create, retreive, update,
+    and destory and also ask for the serializer class and the queryset.
+    """
+    queryset = Member.objects.all()
+    """
+    queryset basically a collection of (sql) queries and will show you
+    the sql query generated from your django filter calls.
+    """
+    serializer_class = MemberSerializer
+    """
+    The serializer class that should be used for validating and
+    deserializing input, and for serializing output.
+    """
+
+    def get_queryset(self):
+        """
+        Returns the queryset that will be used to retrieve the object
+        that this view will display. By default, get_queryset()
+        returns the value of the queryset attribute
+        """
+        print('Executing get_queryset...')
+        return self.queryset.all() # OR Member.objects.all()
+
+    def filter_queryset(self, queryset):
+        """
+        Given a queryset, filter it with whichever filter backends are in use,
+        returning a new queryset.
+
+        queryset parameter contains the value returned from the
+        self.get_queryset() or from queryset class variable
+        """
+        print('Executing filter_queryset...')
+        if 'alias_name' in self.request.query_params:
+            alias_name = self.request.query_params.get('alias_name')
+            return queryset.filter(alias_name=alias_name) # OR Member.objects.filter(alias_name=alias_name)
+        return queryset.all() # OR queryset
+
+    def get_object(self):
+        """
+        get_object works for single instance of the model.
+        """
+        print("Executing get_object...")
+        queryset = self.get_queryset()
+        obj = queryset.get(pk=self.kwargs['pk'])
+        return obj
+
+    def list(self, request):
+        """
+        list is used for "get" request method and supersede get_queryset() and get_filterqueryset()
+        """
+        print('Executing list...')
+        members = Member.objects.all()
+        serializer = MemberSerializer(members, many=True)
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = MemberSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        """
+        Overrides the get_object()
+        """
+        print("Executing retrieve...")
+        member = Member.objects.get(pk=pk)
+        serializer = MemberSerializer(member)
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        member = Member.objects.get(pk=pk)
+        serializer = MemberSerializer(member, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data)
+
+    def destroy(self, request, pk=None):
+        print("Executing delete...")
+        Member.objects.get(pk=pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['name']
+    search_fields = ['name']
+    """
+    '^' Starts-with search.
+    '=' Exact matches.
+    '@' Full-text search. (Currently only supported Django's MySQL backend.)
+    '$' Regex search.
+    """
+    ordering_fields = ['name']
+    """
+    Ordering is supported on all the fields by default. If you want to restrict ordering to only specific 
+    fields. Put in the ordering_fields. 
+    ?ordering=name ==> Ascending order
+    ?ordering=-name ==> Descending order
+    """
+
+class MembershipViewSet(viewsets.ModelViewSet):
+    queryset = Membership.objects.all()
+    serializer_class = GroupMemberSerializer

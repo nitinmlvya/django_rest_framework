@@ -1,0 +1,1 @@
+django-filter==2.2.0
