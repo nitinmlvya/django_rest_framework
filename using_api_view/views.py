@@ -1,8 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, generics, mixins
 from rest_framework.decorators import api_view
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from using_api_view.models import CategoryAV, SubCategoryAV, VendorAV, DeliveryAV, Member, Group, Membership
 from using_api_view.serializers import CategoryAVSerializer, SubCategoryAVSerializer, VendorAVSerializer, \
     DeliveryAVSerializer, MemberSerializer, GroupSerializer, GroupMemberSerializer
@@ -227,3 +229,128 @@ class GroupViewSet(viewsets.ModelViewSet):
 class MembershipViewSet(viewsets.ModelViewSet):
     queryset = Membership.objects.all()
     serializer_class = GroupMemberSerializer
+
+
+"""
+Class based API View
+"""
+
+class MemberListAPIView(APIView):
+
+    def get(self, request):
+        print('Executing APIView get list...')
+        members = Member.objects.all()
+        serializer = MemberSerializer(members, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        print('Executing APIView post ...')
+        serializer = MemberSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data)
+
+class MemberDetailAPIView(APIView):
+
+    def get(self, request, pk):
+        print("Executing APIView get object...")
+        member = Member.objects.get(pk=pk)
+        serializer = MemberSerializer(member)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        print("Executing APIView put object...")
+        member = Member.objects.get(pk=pk)
+        serializer = MemberSerializer(member, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        print("Executing APIView delete...")
+        Member.objects.get(pk=pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+"""
+Using Mixins
+"""
+class MemberListCreateMixins(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    """
+    List of available mixins:
+    ListModelMixin: provides a .list() method to the view/viewset
+    RetrieveModelMixin: provides a .retrieve() method to the view/viewset
+    CreateModelMixin: provides a .create() method to the view/viewset
+    UpdateModelMixin: provides a .update() method to the view/viewset
+    DestroyModelMixin: provides a .destroy() method to the view/viewset
+    """
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
+
+    def list(self, request, *args, **kwargs):
+        print("Mixins list...")
+        members = self.get_queryset()
+        serializer = MemberSerializer(members, many=True)
+        return Response(serializer.data)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+"""
+Using Generic Views
+"""
+class MemberListCreateView(generics.ListCreateAPIView):
+    queryset = Member.objects.all()
+    serializer_class = MemberSerializer
+
+    def list(self, request):
+        # Note the use of `get_queryset()` instead of `self.queryset`
+        queryset = self.get_queryset()
+        serializer = MemberSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+"""
+ListCreateAPIView:
+Used for read-write endpoints to represent a collection of model instances.
+Provides get and post method handlers.
+Extends: GenericAPIView, ListModelMixin, CreateModelMixin
+
+
+RetrieveUpdateDestroyAPIView:
+Provides get, put, patch and delete method handlers.
+Extends: GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
+
+
+GenericViewSet:
+The GenericViewSet class inherits from GenericAPIView, and provides the default set of 
+get_object, get_queryset methods and other generic view base behavior, but does not 
+include any actions by default.
+
+
+ModelViewSet:
+The ModelViewSet class inherits from GenericAPIView and includes implementations for 
+various actions, by mixing in the behavior of the various mixin classes.
+The actions provided by the ModelViewSet class are .list(), .retrieve(), .create(), 
+.update(), and .destroy().
+"""
+
+"""
+APIView is the base class for all API views.
+This is the class we use when not dealing with internal django models. 
+In most cases it is used with external APIs.
+
+
+GenericAPIView is used when you want to have custom URL endpoints or hook into 
+the request method (get, post, put, delete, patch) before getting into the action 
+(retrieve, list, create, update, destroy). Most of the time you can use ViewSet, 
+but there will be some situations where you need more flexibility.
+
+ViewSet provides you everything you need for default actions with Django data.
+ It is built off of GenericAPIView and performs default actions based off of 
+ the type of method received. To add into your urls, you just need to add it into a router.
+"""
