@@ -1,0 +1,294 @@
+filter():
+
+Syntax = Member.objects.filter(**kwargs)
+QuerySet = Member.objects.filter(name='member1')
+SQL Query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`name` = member1
+
+QuerySet 'AND' = Member.objects.filter(id__gt=3, name='member1')
+SQL Query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE (`member`.`id` > 3 AND `member`.`name` = member1)
+
+Using Q object lookup:
+from django.db.models import Q
+
+Query 'AND' = Member.objects.filter(Q(id=3) & Q(name='member1'))
+SQL Query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE (`member`.`id` = 3 AND `member`.`name` = member1)
+
+Query 'OR' = Member.objects.exclude(Q(id=3) | Q(name='member1'))
+SQL Query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE (`member`.`id` = 3 OR `member`.`name` = member1)
+
+To do Join:
+Django query = Group.objects.filter(members__id=1)
+SQL query = SELECT `group`.`id`, `group`.`name` FROM `group` INNER JOIN `membership` ON (`group`.`id` = `membership`.`group_id`) WHERE `membership`.`member_id` = 1
+
+
+
+exclude():
+
+Syntax = Member.objects.exclude(**kwargs)
+QuerySet Example = Member.objects.exclude(name='member1')
+SQL Query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE NOT (`member`.`name` = member1)
+
+QuerySet 'AND' = Member.objects.exclude(id__gt=3, name='member1')   
+SQL Query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE NOT (`member`.`id` > 3 AND `member`.`name` = member1)
+
+Like filter, exclude allows 'AND' and 'OR' using Q object lookup.
+
+
+annotate():
+- Default group by is on primary key ID.
+
+QuerySet = Member.objects.annotate(count_name=Count('name'))
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name`, COUNT(`member`.`name`) AS `count_name` FROM `member` GROUP BY `member`.`id` ORDER BY NULL
+
+QuerySet = Member.objects.values('name').annotate(count_name=Count('name'))
+SQL query = SELECT `member`.`name`, COUNT(`member`.`name`) AS `count_name` FROM `member` GROUP BY `member`.`name` ORDER BY NULL
+
+
+order_by():
+
+- For Ascending = order_by('id') 
+- For Descending = order_by('-id') 
+QuerySet = Member.objects.filter(name='member').order_by('id') 
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`name` = member ORDER BY `member`.`id` ASC
+
+
+distinct():
+
+QuerySet = Member.objects.distinct()
+SQL query = SELECT DISTINCT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member`
+
+
+values():
+
+- Returns a QuerySet that returns dictionaries, rather than model instances, when used as an iterable.
+- Returns specified fields, try .values('name')
+
+QuerySet = Member.objects.values()   
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member`
+Returned value = <QuerySet [{'id': 1, 'name': 'member1', 'alias_name': 'member1'}]>
+
+
+values_list():
+
+- Instead of dictionaries, it returns tuples when iterated over.
+- Returns specified fields, try .values_list('name')
+
+QuerySet = Member.objects.values_list()   
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member`
+Returned value = <QuerySet [(1, 'member1', 'member1')]>
+
+
+all():
+
+QuerySet =  Member.objects.all() 
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member`
+
+
+
+union():
+
+QuerySet = 
+	m1 = Member.objects.filter(name='member1')
+	m2 = Member.objects.filter(name='member2')
+	m1.union(m2) 
+SQL query = (SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`name` = member1) UNION (SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`name` = member3)
+
+
+union():
+
+QuerySet = 
+	m1 = Member.objects.filter(name='member1')
+	m2 = Member.objects.filter(name='member2')
+	m1.union(m2) 
+SQL query = (SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`name` = member1) UNION (SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`name` = member3)
+
+
+
+select_related():
+
+- Returns a QuerySet that will “follow” foreign-key relationships
+- This is a performance booster which results in a single more complex query but means later use of foreign-key relationships won’t require database queries.
+- It is limited to single-valued relationships - foreign key and one-to-one.
+- It is also used to do Joins
+
+Django query = Membership.objects.select_related('group')  
+SQL query = SELECT `membership`.`id`, `membership`.`member_id`, `membership`.`group_id`, `group`.`id`, `group`.`name` FROM `membership` INNER JOIN `group` ON (`membership`.`group_id` = `group`.`id`)
+
+
+prefetch_related():
+- will automatically retrieve, in a single batch, related objects for each of the specified lookups.
+- This allows it to prefetch many-to-many and many-to-one objects, which cannot be done using select_related.
+
+Django query = Group.objects.all().prefetch_related('members')
+SQL query = SELECT `group`.`id`, `group`.`name` FROM `group`
+
+
+using():
+- queries the database with the 'default' alias.
+Django query = Member.objects.all()
+
+- queries the database with the 'backup' alias
+Django query = Member.objects.using('backup')
+
+
+Methods that do not return QuerySets:
+
+
+get(**kwargs):
+
+Django query = Member.objects.get(id=1) # raises Entry.DoesNotExist
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`id` = 1
+
+
+create(**kwargs):
+
+Django query = Member.objects.create(name='member1') 
+OR
+Django query = 
+m = Member(name='member1') 
+m.save()
+
+
+update(**kwargs):
+
+Django query = Member.objects.filter(name='member1').update(name='member1', alias_name='member1')
+SQL query = UPDATE `member` SET `name` = member1, `alias_name` = member1 WHERE `member`.`name` = member1
+
+
+delete():
+Django query = 
+	Single delete:
+	obj = Member.objects.get(pk=1)
+	obj.delete()
+
+	Multiple delete:
+	obj = Member.objects.filter(name='member1')
+	obj.delete()
+
+get_or_create(defaults=None, **kwargs):
+
+- returns a tuple of (object, created)
+
+Django query = 
+	obj, created = Member.objects.get_or_create(
+	    name='John',
+	    defaults={'alias_name': 'John'},
+)
+
+which is equivalent to
+
+	try:
+	    obj = Member.objects.get(name='John')
+	except Member.DoesNotExist:
+	    obj = Member(name='John', alias_name='John')
+	    obj.save()
+
+
+update_or_create(defaults=None, **kwargs):
+
+Django query= 
+	obj, created = Member.objects.update_or_create(
+	    name='John', alias_name='John',
+	    defaults={'alias_name': 'Bob'},
+	)
+
+which is equivalent to 
+
+	defaults = {'alias_name': 'Bob'}
+	try:
+	    obj = Member.objects.get(name='John')
+        obj.alias_name = defaults['alias_name']
+	    obj.save()
+	except Member.DoesNotExist:
+	    new_values = {'name': 'John', 'alias_name': 'John'}
+	    new_values.update(defaults)
+	    obj = Member(**new_values)
+	    obj.save()
+
+
+bulk_create():
+
+- No need to call .save()
+
+Member.objects.bulk_create(
+	    Member(name='John', alias_name='John'),
+	    Member(name='Bob', alias_name='Bob')
+)
+
+
+bulk_update():
+
+objs = Member.objects.bulk_create(
+	    Member.objects.create(name='John', alias_name='John'),
+	    Member.objects.create(name='Bob', alias_name='Bob')
+)
+objs[0].name = 'John A.'
+objs[1].name = 'Bob A.'
+Member.objects.bulk_update(objs, ['name'])
+
+
+
+Field Lookup:
+
+exact():
+- exact() is case-sensitive.
+- iexact() is case-insensitive.
+- contains() is Case-sensitive containment test.
+- icontains() is Case-insensitive containment test.
+
+
+Django query = Member.objects.get(id__exact=1)
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`id` = 1
+
+
+
+in():
+
+Django query = Member.objects.filter(id__in=[1, 3, 4])
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`id` IN (1, 3, 4)
+
+
+
+gt(), lt(), gte(), lte(), startswith(), endswith():
+Django query = Member.objects.filter(id__gt=2)
+SQL query = SELECT `member`.`id`, `member`.`name`, `member`.`alias_name` FROM `member` WHERE `member`.`id` > 2
+
+
+
+aggregate():
+
+- Aggregate functions are Count, Sum, Avg, Max, Min, 
+
+Django query = 
+	from django.db.models import Count
+	Member.objects.aggregate(Count('name'))
+	Output => {'name__count': 17}
+SQL query = SELECT COUNT(`member`.`name`) AS `name__count` FROM `member`
+
+
+
+Raw Query:
+
+from django.db import connection
+def my_custom_sql(self):
+    with connection.cursor() as cursor:
+        cursor.execute("UPDATE bar SET foo = 1 WHERE baz = %s", [self.baz])
+        cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
+        row = cursor.fetchone()
+
+    return row
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
