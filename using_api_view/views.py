@@ -5,9 +5,9 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from using_api_view.models import CategoryAV, SubCategoryAV, VendorAV, DeliveryAV, Member, Group, Membership
+from using_api_view.models import CategoryAV, SubCategoryAV, VendorAV, DeliveryAV, Member, Group, Membership, FileUpload
 from using_api_view.serializers import CategoryAVSerializer, SubCategoryAVSerializer, VendorAVSerializer, \
-    DeliveryAVSerializer, MemberSerializer, GroupSerializer, GroupMemberSerializer
+    DeliveryAVSerializer, MemberSerializer, GroupSerializer, GroupMemberSerializer, FileUploadSerializer
 
 
 @api_view(['GET', 'POST'])
@@ -354,3 +354,11 @@ ViewSet provides you everything you need for default actions with Django data.
  It is built off of GenericAPIView and performs default actions based off of 
  the type of method received. To add into your urls, you just need to add it into a router.
 """
+
+
+"""
+File Upload
+"""
+class FileUploadListCreateView(generics.ListCreateAPIView):
+    queryset = FileUpload.objects.all()
+    serializer_class = FileUploadSerializer

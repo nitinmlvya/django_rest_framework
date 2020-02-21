@@ -5,7 +5,7 @@ from using_api_view import views
 
 # Routers are used with ViewSets in django rest framework to auto config the urls.
 # Routers provides a simple, quick and consistent way of wiring ViewSet logic to a set of URLs.
-from using_api_view.views import MemberListCreateView, MemberListCreateMixins
+from using_api_view.views import MemberListCreateView, MemberListCreateMixins, FileUploadListCreateView
 
 router = DefaultRouter()
 router.register(r'member', views.MemberViewSet)
@@ -31,5 +31,6 @@ urlpatterns = [
     path('class_api_view/member/', views.MemberListAPIView.as_view()),
     path('class_api_view/member/<int:pk>/', views.MemberDetailAPIView.as_view()),
     path('class_generic_list_create_view', MemberListCreateView.as_view()),
-    path('member_mixins', MemberListCreateMixins.as_view())
+    path('member_mixins', MemberListCreateMixins.as_view()),
+    path('file_upload', FileUploadListCreateView.as_view())
 ]

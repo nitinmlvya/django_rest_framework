@@ -54,3 +54,11 @@ class Membership(models.Model):
 
     class Meta:
         db_table = 'membership'
+
+
+class FileUpload(models.Model):
+    filename = models.CharField(max_length=100)
+    url = models.FileField(upload_to='docs')
+
+    class Meta:
+        db_table = 'file_upload'

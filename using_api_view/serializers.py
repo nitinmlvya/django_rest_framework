@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 from using_api_view.models import CategoryAV, SubCategoryAV, VendorAV, DeliveryAV, Member, Group, \
-    Membership
+    Membership, FileUpload
 
 
 class SubCategoryAVSerializer(serializers.ModelSerializer):
@@ -56,3 +56,9 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = '__all__'
         depth = 1
+
+
+class FileUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FileUpload
+        fields = '__all__'
