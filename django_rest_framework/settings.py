@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # 'django.contrib.admin', # Comment if you are using custom user
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'get_started',
-    'using_api_view'
+    'using_api_view',
+    # 'user_profile',
+    'extend_user'
 ]
 
 MIDDLEWARE = [
@@ -128,6 +130,7 @@ then Django will try that one first. If that raises an exception, then you will 
 (I suspect that this is what is happening). Django won't ever get to issue the redirect.
 """
 
+AUTH_USER_MODEL = 'extend_user.User'
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
