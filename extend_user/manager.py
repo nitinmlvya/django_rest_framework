@@ -3,26 +3,22 @@ from django.contrib.auth.base_user import BaseUserManager
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, email, password=None):
-
-        if email is None:
+    def create_user(self, **kwargs):
+        print('kwargs: ', kwargs)
+        if kwargs['email'] is None:
             raise TypeError('Users must have an email address.')
-
-        user = self.model(email=self.normalize_email(email))
-        print('user: ', user)
-        user.set_password(password)
+        user = self.model(username=kwargs['username'], email=self.normalize_email(kwargs['email']))
+        user.set_password(kwargs['password'])
         user.save()
-
         return user
 
-    def create_superuser(self, email, password):
-
-        if password is None:
-            raise TypeError('Superusers must have a password.')
-
-        user = self.create_user(email, password)
+    def create_superuser(self, **kwargs):
+        print('kwargs: ', kwargs)
+        if kwargs['email'] is None:
+            raise TypeError('Users must have an email address.')
+        user = self.model(username=kwargs['username'], email=self.normalize_email(kwargs['email']))
+        user.set_password(kwargs['password'])
         user.is_superuser = True
-        user.is_staff = True
-        user.save()
-
+        print(user.is_superuser)
+        # user.save()
         return user
