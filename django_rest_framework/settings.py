@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin', # Comment if you are using custom user
+    # 'django.contrib.admin', # Comment if you are using custom user
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -118,6 +118,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ] ==> IsAuthenticated is applied here then it automatically applies to all the rest apis. Not Recommended
 }
 # DjangoFilterBackend class which supports highly customizable field filtering for REST framework.
 

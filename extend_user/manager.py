@@ -7,7 +7,7 @@ class UserManager(BaseUserManager):
         print('kwargs: ', kwargs)
         if kwargs['email'] is None:
             raise TypeError('Users must have an email address.')
-        user = self.model(username=kwargs['username'], email=self.normalize_email(kwargs['email']))
+        user = self.model(**kwargs)
         user.set_password(kwargs['password'])
         user.save()
         return user
@@ -16,9 +16,8 @@ class UserManager(BaseUserManager):
         print('kwargs: ', kwargs)
         if kwargs['email'] is None:
             raise TypeError('Users must have an email address.')
-        user = self.model(username=kwargs['username'], email=self.normalize_email(kwargs['email']))
+        user = self.model(**kwargs)
         user.set_password(kwargs['password'])
         user.is_superuser = True
-        print(user.is_superuser)
-        # user.save()
+        user.save()
         return user
